@@ -172,4 +172,4 @@ https://stack-Sushant.github.io/bank-of-msit/
 
 ## 📝 Subject
 **Database Management Systems (DBMS)**  
-Maharaja Surajmal Institute of Technology (MSIT)
+Maharaja Surajmal Institute of Technology MSIT
