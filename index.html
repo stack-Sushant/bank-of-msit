@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bank of MSIT — Banking Database Management System</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     HEADER
+════════════════════════════════════════════════════════════ -->
+<header>
+  <a class="logo" href="#">
+    <div class="logo-icon">
+      <svg viewBox="0 0 20 20" width="18" height="18">
+        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zm14 4H2v6a2 2 0 002 2h12a2 2 0 002-2V8zM6 11a1 1 0 100 2 1 1 0 000-2zm4 0a1 1 0 100 2 1 1 0 000-2z"/>
+      </svg>
+    </div>
+    Bank of MSIT
+  </a>
+
+  <div class="header-right">
+    <button class="btn btn-outline btn-sm" onclick="exportDB()">⬇ Export DB</button>
+    <label class="btn btn-outline btn-sm" style="cursor:pointer">
+      ⬆ Import DB
+      <input type="file" id="importFile" accept=".sqlite" style="display:none" onchange="importDB(this)"/>
+    </label>
+    <button class="btn btn-primary btn-sm" onclick="showPage('transactions')">+ New Transaction</button>
+  </div>
+</header>
+
+<div class="app">
+
+<!-- ═══════════════════════════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════════════════════════ -->
+<nav>
+  <div class="nav-section">
+    <div class="nav-label">Overview</div>
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <svg viewBox="0 0 20 20" fill="currentColor">
+        <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"/>
+        <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"/>
+      </svg>
+      Dashboard
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Master Data</div>
+    <div class="nav-item" onclick="showPage('branches')">
+      <svg viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+      </svg>
+      Branches
+    </div>
+    <div class="nav-item" onclick="showPage('customers')">
+      <svg viewBox="0 0 20 20" fill="currentColor">
+        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+      </svg>
+      Customers
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Operations</div>
+    <div class="nav-item" onclick="showPage('accounts')">
+      <svg viewBox="0 0 20 20" fill="currentColor">
+        <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"/>
+      </svg>
+      Accounts
+    </div>
+    <div class="nav-item" onclick="showPage('transactions')">
+      <svg viewBox="0 0 20 20" fill="currentColor">
+        <path d="M8 5a1 1 0 100 2h5.586l-1.293 1.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L13.586 5H8zM12 15a1 1 0 100-2H6.414l1.293-1.293a1 1 0 10-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L6.414 15H12z"/>
+      </svg>
+      Transactions
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Reports</div>
+    <div class="nav-item" onclick="showPage('sql')">
+      <svg viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+      </svg>
+      SQL Console
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN CONTENT
+════════════════════════════════════════════════════════════ -->
+<main>
+
+  <!-- ── DASHBOARD ──────────────────────────────────────── -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-heading">
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-subtitle">Bank of MSIT — Live Overview</p>
+    </div>
+
+    <div class="grid-4" style="margin-bottom:20px">
+      <div class="stat">
+        <div class="stat-label">Branches</div>
+        <div class="stat-value" id="s-branches">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Customers</div>
+        <div class="stat-value" id="s-customers">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Accounts</div>
+        <div class="stat-value" id="s-accounts">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Transactions</div>
+        <div class="stat-value" id="s-txns">0</div>
+      </div>
+      <div class="stat" style="grid-column:span 2">
+        <div class="stat-label">Total Deposits</div>
+        <div class="stat-value" id="s-deposits" style="font-size:20px">₹0</div>
+      </div>
+      <div class="stat" style="grid-column:span 2">
+        <div class="stat-label">Total Balance Held</div>
+        <div class="stat-value" id="s-balance" style="font-size:20px">₹0</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Recent Transactions</div>
+            <div class="card-subtitle">Latest 8 transactions</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Type</th><th>Amount</th><th>Account</th><th>Date</th></tr></thead>
+            <tbody id="recent-txns"><tr><td colspan="5" class="empty">No transactions yet</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Top Account Balances</div>
+            <div class="card-subtitle">Highest balance accounts</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Account</th><th>Customer</th><th>Type</th><th>Balance</th></tr></thead>
+            <tbody id="top-accounts"><tr><td colspan="4" class="empty">No accounts yet</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BRANCHES ───────────────────────────────────────── -->
+  <div class="page" id="page-branches">
+    <div class="page-heading">
+      <h1 class="page-title">Branches</h1>
+      <p class="page-subtitle">Bank of MSIT branch network</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Add New Branch</div></div>
+        <div class="card-body">
+          <div id="msg-branch"></div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Branch ID (Primary Key)</label>
+              <input id="br-id" placeholder="e.g. BR004"/>
+            </div>
+            <div class="form-group">
+              <label>Branch Name</label>
+              <input id="br-name" placeholder="e.g. Karol Bagh Branch"/>
+            </div>
+            <div class="form-group full">
+              <label>Address</label>
+              <input id="br-addr" placeholder="Branch address"/>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="addBranch()">Add Branch</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">All Branches</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Branch ID</th><th>Name</th><th>Address</th><th></th></tr></thead>
+            <tbody id="tbl-branches"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CUSTOMERS ──────────────────────────────────────── -->
+  <div class="page" id="page-customers">
+    <div class="page-heading">
+      <h1 class="page-title">Customers</h1>
+      <p class="page-subtitle">Manage customer records</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Add New Customer</div></div>
+        <div class="card-body">
+          <div id="msg-customer"></div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Customer ID (Primary Key)</label>
+              <input id="c-id" placeholder="e.g. CUST005"/>
+            </div>
+            <div class="form-group">
+              <label>Full Name</label>
+              <input id="c-name" placeholder="e.g. Riya Singh"/>
+            </div>
+            <div class="form-group">
+              <label>Address</label>
+              <input id="c-addr" placeholder="Residential address"/>
+            </div>
+            <div class="form-group">
+              <label>Contact Number</label>
+              <input id="c-phone" placeholder="10-digit mobile number"/>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="addCustomer()">Add Customer</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">All Customers</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Customer ID</th><th>Name</th><th>Address</th><th>Contact</th><th></th></tr></thead>
+            <tbody id="tbl-customers"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ACCOUNTS ───────────────────────────────────────── -->
+  <div class="page" id="page-accounts">
+    <div class="page-heading">
+      <h1 class="page-title">Accounts</h1>
+      <p class="page-subtitle">Open and manage bank accounts</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Open New Account</div></div>
+        <div class="card-body">
+          <div id="msg-account"></div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Account ID (Primary Key)</label>
+              <input id="a-id" placeholder="e.g. ACC007"/>
+            </div>
+            <div class="form-group">
+              <label>Account Type</label>
+              <select id="a-type">
+                <option>Savings</option>
+                <option>Current</option>
+                <option>Fixed Deposit</option>
+                <option>Recurring Deposit</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Initial Balance (₹)</label>
+              <input id="a-bal" type="number" placeholder="Minimum 0" min="0"/>
+            </div>
+            <div class="form-group">
+              <label>Customer (Foreign Key)</label>
+              <select id="a-cust"><option value="">-- Select Customer --</option></select>
+            </div>
+            <div class="form-group full">
+              <label>Branch (Foreign Key)</label>
+              <select id="a-branch"><option value="">-- Select Branch --</option></select>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="addAccount()">Open Account</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">All Accounts</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Account ID</th><th>Type</th><th>Balance</th><th>Customer</th><th>Branch</th><th></th></tr></thead>
+            <tbody id="tbl-accounts"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TRANSACTIONS ────────────────────────────────────── -->
+  <div class="page" id="page-transactions">
+    <div class="page-heading">
+      <h1 class="page-title">Transactions</h1>
+      <p class="page-subtitle">Deposits, Withdrawals &amp; Transfers — ACID compliant</p>
+    </div>
+    <div class="grid-2">
+      <div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><div class="card-title">New Transaction</div></div>
+          <div class="card-body">
+            <div id="msg-txn"></div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Transaction ID (Primary Key)</label>
+                <input id="t-id" placeholder="e.g. TXN011"/>
+              </div>
+              <div class="form-group">
+                <label>Transaction Type</label>
+                <select id="t-type" onchange="toggleTransfer()">
+                  <option>Deposit</option>
+                  <option>Withdrawal</option>
+                  <option>Transfer</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Account (Foreign Key)</label>
+                <select id="t-acc"><option value="">-- Select Account --</option></select>
+              </div>
+              <div class="form-group" id="t-to-group" style="display:none">
+                <label>To Account (Transfer)</label>
+                <select id="t-to-acc"><option value="">-- Select Account --</option></select>
+              </div>
+              <div class="form-group">
+                <label>Amount (₹)</label>
+                <input id="t-amt" type="number" min="1" placeholder="Enter amount"/>
+              </div>
+              <div class="form-group">
+                <label>Date</label>
+                <input id="t-date" type="date"/>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="addTransaction()">Process Transaction</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">Balance Enquiry</div></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group full">
+                <label>Select Account</label>
+                <select id="bal-acc"><option value="">-- Select Account --</option></select>
+              </div>
+            </div>
+            <button class="btn btn-outline" onclick="checkBalance()">Check Balance</button>
+            <div id="bal-result" style="margin-top:12px"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Transaction History</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Txn ID</th><th>Type</th><th>Amount</th><th>Account</th><th>Date</th><th></th></tr></thead>
+            <tbody id="tbl-txns"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SQL CONSOLE ─────────────────────────────────────── -->
+  <div class="page" id="page-sql">
+    <div class="page-heading">
+      <h1 class="page-title">SQL Console</h1>
+      <p class="page-subtitle">Execute SQL queries directly on the database</p>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">Query Editor</div></div>
+      <div class="card-body">
+        <div style="margin-bottom:10px">
+          <label style="font-size:12px;color:var(--gray-500)">Quick Queries:</label>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">
+            <button class="btn btn-outline btn-sm" onclick="setQ('SELECT * FROM Branch;')">All Branches</button>
+            <button class="btn btn-outline btn-sm" onclick="setQ('SELECT * FROM Customer;')">All Customers</button>
+            <button class="btn btn-outline btn-sm" onclick="setQ('SELECT * FROM Account;')">All Accounts</button>
+            <button class="btn btn-outline btn-sm" onclick="setQ('SELECT * FROM Transaction_Table ORDER BY Date DESC;')">All Transactions</button>
+            <button class="btn btn-outline btn-sm" onclick="setQ('SELECT c.Name, a.Account_ID, a.Account_Type, a.Balance FROM Customer c JOIN Account a ON c.Customer_ID=a.Customer_ID ORDER BY a.Balance DESC;')">Customer + Accounts</button>
+            <button class="btn btn-outline btn-sm" onclick="setQ(&quot;SELECT a.Account_ID, SUM(t.Amount) as Total FROM Account a JOIN Transaction_Table t ON a.Account_ID=t.Account_ID WHERE t.Transaction_Type='Deposit' GROUP BY a.Account_ID;&quot;)">Deposits per Account</button>
+            <button class="btn btn-outline btn-sm" onclick="setQ('SELECT b.Name as Branch, COUNT(a.Account_ID) as Accounts FROM Branch b LEFT JOIN Account a ON b.Branch_ID=a.Branch_ID GROUP BY b.Branch_ID;')">Accounts per Branch</button>
+            <button class="btn btn-outline btn-sm" onclick="setQ('SELECT c.Name, COUNT(a.Account_ID) as Total_Accounts, SUM(a.Balance) as Total_Balance FROM Customer c LEFT JOIN Account a ON c.Customer_ID=a.Customer_ID GROUP BY c.Customer_ID;')">Customer Summary</button>
+          </div>
+        </div>
+        <textarea
+          id="sql-input"
+          rows="4"
+          style="font-family:'DM Mono',monospace;font-size:13px;margin-bottom:10px;background:var(--gray-900);color:#e5e7eb;border-color:var(--gray-700);padding:12px"
+          placeholder="SELECT * FROM Customer;">
+        </textarea>
+        <button class="btn btn-primary" onclick="runSQL()">&#9654; Run Query</button>
+        <button class="btn btn-outline" onclick="document.getElementById('sql-input').value=''">Clear</button>
+      </div>
+    </div>
+
+    <div class="card" id="sql-result-card" style="display:none">
+      <div class="card-header">
+        <div class="card-title">Query Result</div>
+        <div id="sql-rows" style="margin-left:auto;font-size:12px;color:var(--gray-400)"></div>
+      </div>
+      <div class="table-wrap">
+        <table id="sql-result-table">
+          <thead id="sql-result-head"></thead>
+          <tbody id="sql-result-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="sql-error" style="display:none" class="alert alert-error"></div>
+  </div>
+
+</main>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast"></div>
+
+<!-- SCRIPT -->
+<script src="script.js"></script>
+</body>
+</html>
