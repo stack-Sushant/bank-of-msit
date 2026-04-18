@@ -9,9 +9,9 @@ The entire system runs in the browser — no installation, no backend, no server
 
 | Name | Role |
 |------|------|
-| Sushant | Database Logic (`script.js`) |
-| Mayank | Structure & Pages (`index.html`) |
-| Aarushi | Styling & Design (`style.css`) |
+| Sushant | Database Logic |
+| Mayank | Structure & Pages |
+| Aarushi | Styling & Design |
 | Ananya | Testing & SQL Queries |
 
 ---
